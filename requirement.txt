@@ -1,0 +1,5 @@
+Flask==3.x.x
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.x.x
+Werkzeug==3.x.x
+gunicorn==21.x.x
