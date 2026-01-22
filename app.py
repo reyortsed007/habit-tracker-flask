@@ -233,7 +233,6 @@ def toggle():
 
     db.session.commit()
     return {"status": "ok"}
-
 @app.route('/toggle-theme', methods=['POST'])
 @login_required
 def toggle_theme():
