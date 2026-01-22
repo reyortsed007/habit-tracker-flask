@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-20 card p-6">
+    <h1 class = 'text-xl font-semibold mb-4 text-center'>Create account</h1>
+
+    <form method="post" class = 'space-y-4'>
+        <input
+          type = 'email'
+          name = 'email'
+          placeholder = 'Email'
+          required
+          class = 'w-full px-3 py-2 rounded bg-slate-800 border border-black/10'/>
+        <input 
+          type = 'password'
+          name = 'password'
+          placeholder = 'password'
+          required
+          class = 'w-full py-2 rounded bg-slate-800 border border-black/10'/>
+        <button
+            class = 'w-full py-2 rounded bg-blue-600 hover:bg-blue-700 font-medium'>
+        Sign Up
+        </button>
+    </form>
+    <p class="'text-sm opacity-80 mt-4 text-center">
+        Have an account?
+        <a href="/login" class="text-blue-600 hover:underline">Login</a>
+    </p>
+</div>
+
+{% endblock %}

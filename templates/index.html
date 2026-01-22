@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1 class="text-2xl font-semibold mb-4">Today</h1>
+
+<!-- LIBS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<div class="grid gap-6">
+
+  {% for habit in habits %}
+  <div class="card rounded-2xl p-5 habit-card">
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-3 h-3 rounded-full" style="background: {{ habit.color }};"></div>
+      <div class="font-medium">{{ habit.name }}</div>
+      <span class="text-xs opacity-60">Streak: {{ streaks[habit.id] }} 🔥</span>
+    </div>
+
+    <div class="flex gap-6 items-center">
+
+      <!-- LEFT -->
+      <div class="flex-1">
+
+        <!-- WEEK BUTTONS -->
+        <div class="grid grid-cols-7 gap-2 text-xs">
+          {% for day in days %}
+            {% set checked = (habit.id, day) in check_map %}
+            <button
+              class="day-btn h-8 rounded-lg
+                {% if checked %}
+                  bg-emerald-500 text-white
+                {% else %}
+                  bg-slate-800 border border-white/10
+                {% endif %}
+              "
+              data-habit="{{ habit.id }}"
+              data-day="{{ day.isoformat() }}"
+              data-checked="{{ 1 if checked else 0 }}"
+            >
+              {{ day.strftime('%a') }}
+            </button>
+          {% endfor %}
+        </div>
+
+        <!-- BAR + LINE -->
+        <canvas class="barline mt-4" height="80"></canvas>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="w-28 text-center">
+        <canvas class="donut" width="90" height="90"></canvas>
+        <div class="percent text-xs mt-1"></div>
+        <div class="status text-xs mt-0.5"></div>
+      </div>
+
+    </div>
+
+  </div>
+  {% endfor %}
+
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  document.querySelectorAll('.habit-card').forEach(card => {
+
+    const buttons = card.querySelectorAll('.day-btn');
+    const values = [...buttons].map(b => Number(b.dataset.checked));
+
+    const completed = values.reduce((a,b)=>a+b,0);
+    const total = values.length;
+    const missed = total - completed;
+    const percent = total ? Math.round((completed/total)*100) : 0;
+
+    /* DONUT */
+    new Chart(card.querySelector('.donut'), {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [completed, missed],
+          cutout: '70%'
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    card.querySelector('.percent').innerText =
+      `${percent}% consistent`;
+
+    card.querySelector('.status').innerText =
+      percent < 50 ? 'Needs work'
+      : percent < 80 ? 'Improving'
+      : 'On track';
+
+    /* BAR + LINE */
+    new Chart(card.querySelector('.barline'), {
+      type: 'bar',
+      data: {
+        labels: ['Fri','Sat','Sun','Mon','Tue','Wed','Thu'],
+        datasets: [
+          { type: 'bar', data: values },
+          { type: 'line', data: values, tension: 0.4 }
+        ]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true, ticks:{precision:0} }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+  });
+
+  /* TOGGLE CLICK */
+  document.querySelectorAll('.day-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await axios.post('/toggle', new URLSearchParams({
+        habit_id: btn.dataset.habit,
+        day: btn.dataset.day
+      }));
+      location.reload();
+    });
+  });
+
+});
+</script>
+
+{% endblock %}
+ 

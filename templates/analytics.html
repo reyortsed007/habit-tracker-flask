@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% set month_names = [
+  '', 'January','February','March','April','May','June',
+  'July','August','September','October','November','December'
+] %}
+
+{% block content %}
+
+<h1 class="text-2xl font-semibold mb-4">Analytics</h1>
+<p class="opacity-80 mb-4 text-sm">
+  Past 7 days of total check-ins across all habits.
+</p>
+
+<!-- WEEKLY CHART -->
+<div class="card rounded-2xl p-4 mb-10">
+  <canvas id="chart" height="140"></canvas>
+  <div id="summary" class="text-sm opacity-80 mt-3"></div>
+</div>
+
+<!-- MONTH NAVIGATION -->
+<div class="flex items-center justify-between mb-6">
+  <a
+    href="/analytics?year={{ year }}&month={{ month - 1 }}"
+    class="text-sm opacity-70 hover:opacity-100"
+  >
+    ← Previous
+  </a>
+
+  <h2 class="text-xl font-semibold">
+    {{ month_names[month] }} {{ year }}
+  </h2>
+
+  <a
+    href="/analytics?year={{ year }}&month={{ month + 1 }}"
+    class="text-sm opacity-70 hover:opacity-100"
+  >
+    Next →
+  </a>
+</div>
+
+<!-- HABIT CALENDARS -->
+<div class="grid gap-8">
+
+  {% for habit in habits %}
+  <div class="card rounded-2xl p-4">
+
+    <!-- Habit header -->
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-3 h-3 rounded-full" style="background: {{ habit.color }}"></div>
+      <div class="font-medium">{{ habit.name }}</div>
+    </div>
+
+    <!-- Weekday header -->
+    <div class="grid grid-cols-7 text-xs opacity-60 mb-1">
+      <div>Sun</div><div>Mon</div><div>Tue</div>
+      <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="grid grid-cols-7 gap-1 text-xs">
+      {% for week in calendars[habit.id] %}
+        {% for day in week %}
+          <div
+            class="h-10 rounded-md flex items-center justify-center
+              {% if not day.in_month %}
+                opacity-30
+              {% elif day.checked %}
+                bg-emerald-500 text-white
+              {% else %}
+                bg-red-500/70 text-white
+              {% endif %}
+            "
+            title="{{ day.date }}"
+          >
+            {{ day.date.day }}
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <!-- Legend -->
+    <div class="flex gap-4 text-xs opacity-70 mt-3">
+      <div class="flex items-center gap-1">
+        <span class="w-2 h-2 bg-green-500 rounded inline-block"></span> Clean
+      </div>
+      <div class="flex items-center gap-1">
+        <span class="w-2 h-2 bg-red-500 rounded inline-block"></span> Missed
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+
+</div>
+
+<!-- CHART SCRIPT -->
+<script>
+fetch('/analytics.json')
+  .then(r => r.json())
+  .then(({ labels, counts }) => {
+
+    const total = counts.reduce((a, b) => a + b, 0);
+    document.getElementById('summary').textContent =
+      'Total check-ins this week 🔥: ' + total;
+
+    const isLight = document.body.classList.contains('bg-white');
+
+    new Chart(document.getElementById('chart'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Check-ins',
+          data: counts,
+          backgroundColor: 'rgba(59,130,246,0.6)'
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            labels: {
+              color: isLight ? '#0f172a' : '#e5e7eb'
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: isLight ? '#0f172a' : '#e5e7eb' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              color: isLight ? '#0f172a' : '#e5e7eb'
+            }
+          }
+        }
+      }
+    });
+
+  });
+</script>
+
+{% endblock %}

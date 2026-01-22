@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Habit Tracker</title>
+
+  <!-- LIBS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CUSTOM STYLES -->
+  <style>
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 1rem;
+    }
+
+    body.light .card {
+      background: #ffffff;
+      border-color: rgba(0,0,0,.08);
+    }
+  </style>
+</head>
+
+<body class="
+  {% if current_user.is_authenticated and current_user.theme == 'light' %}
+    light bg-white text-slate-900
+  {% else %}
+    bg-slate-950 text-slate-100
+  {% endif %}
+  transition-colors
+">
+
+<!-- ================= NAVBAR ================= -->
+<nav class="border-b border-white/10 bg-slate-900/60 backdrop-blur sticky top-0 z-10">
+  <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+
+    <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+
+    <a href="/" class="font-semibold">Dashboard</a>
+    <a href="/habits" class="opacity-80 hover:opacity-100">Habits</a>
+    <a href="/analytics" class="opacity-80 hover:opacity-100">Analytics</a>
+
+    <!-- RIGHT SIDE -->
+    <div class="ml-auto flex items-center gap-4">
+
+      {% if current_user.is_authenticated %}
+
+        <!-- THEME TOGGLE -->
+        <button
+          id="themeToggle"
+          class="text-lg opacity-70 hover:opacity-100"
+          title="Toggle theme"
+        >
+          🌗
+        </button>
+
+        <!-- LOGOUT -->
+        <a
+          href="/logout"
+          class="text-sm opacity-70 hover:opacity-100"
+          title="Logout"
+        >
+          🚪
+        </a>
+
+      {% else %}
+
+        <!-- LOGIN -->
+        <a
+          href="/login"
+          class="text-sm opacity-70 hover:opacity-100"
+        >
+          Login
+        </a>
+
+        <!-- SIGNUP -->
+        <a
+          href="/signup"
+          class="text-sm opacity-70 hover:opacity-100"
+        >
+          Sign up
+        </a>
+
+      {% endif %}
+    </div>
+
+  </div>
+</nav>
+
+<!-- ================= MAIN ================= -->
+<main class="max-w-4xl mx-auto px-4 py-6">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="space-y-2 mb-4">
+        {% for category, message in messages %}
+          <div class="
+            px-3 py-2 rounded-lg text-sm font-medium
+            {% if category == 'success' %}
+              bg-green-600 text-white
+            {% elif category == 'error' %}
+              bg-red-600 text-white
+            {% else %}
+              bg-slate-600 text-white
+            {% endif %}
+          ">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+</main>
+
+<!-- ================= THEME TOGGLE SCRIPT ================= -->
+<script>
+const btn = document.getElementById('themeToggle');
+
+if (btn) {
+  btn.addEventListener('click', async () => {
+    await fetch('/toggle-theme', { method: 'POST' });
+    location.reload();
+  });
+}
+</script>
+
+</body>
+</html>
